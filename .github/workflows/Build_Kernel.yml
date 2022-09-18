@@ -15,30 +15,35 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - name: Get the source code of this repositorie...
-        uses: actions/checkout@main
 
       - name: Configuration Environment
         run: |
+          cd $GITHUB_WORKSPACE
           sudo apt update && sudo apt -y dist-upgrade
-          sudo apt install -y git-core gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc unzip bc libssl-dev cpio python2
-          sudo ln -sf /usr/bin/python2 /usr/bin/python
+          sudo apt install -y wget gcc g++ python make texinfo texlive bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagemagick lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev unzip language-pack-zh-hans
           git config --global user.name "demokernel"
           git config --global user.email "demokernel@hotmail.com"
 
-      - name: Clone device kernel
+      - name: Clone device kernel & prebuilts_gcc
         run: |
-          cd $GITHUB_WORKSPACE
           git clone --depth=1 https://github.com/lineageos/android_kernel_xiaomi_sm8250.git -b lineage-19.1
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 aarch64-linux-android-4.9
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git -b lineage-19.1 arm-linux-androideabi-4.9
+          
+      - name: Download clang
+          mkdir clang && cd clang
+          wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android12-dev/clang-r416183b1.tar.gz
+          sudo tar -zxvf clang-r416183b1.tar.gz && rm clang-r416183b1.tar.gz
 
       - name: Clone compiler && Building kernel
         run: |
           cd $GITHUB_WORKSPACE/android_kernel_xiaomi_sm8250
-          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1
           export ARCH=arm64
           export SUBARCH=arm64
           export CLANG_TRIPLE=aarch64-linux-gnu-
-          export CROSS_COMPILE=${PWD}/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9/bin/aarch64-none-linux-gnu-
+          export CROSS_COMPILE=aarch64-none-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-androideabi-
+          PATH="$GITHUB_WORKSPACE/clang/bin:$GITHUB_WORKSPACE/aarch64-linux-android-4.9/bin:$GITHUB_WORKSPACE/arm-linux-androideabi-4.9/bin:${PATH}"
           mkdir out
           make clean
           make mrproper
