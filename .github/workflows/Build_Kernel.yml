@@ -31,6 +31,7 @@ jobs:
           git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git -b lineage-19.1 arm-linux-androideabi-4.9
           
       - name: Download clang
+        run: |
           mkdir clang && cd clang
           wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android12-dev/clang-r416183b1.tar.gz
           sudo tar -zxvf clang-r416183b1.tar.gz && rm clang-r416183b1.tar.gz
